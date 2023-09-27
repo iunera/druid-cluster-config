@@ -1,0 +1,40 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: druid-exporter
+  namespace: druid
+spec:
+  releaseName: druid-exporter
+  targetNamespace: druid
+  chart:
+    spec:
+      chart: druid-exporter
+      version: ">=0.20.0"
+      sourceRef:
+        kind: HelmRepository
+        name: iunera-helm-charts
+        namespace: druid
+  interval: 10m0s
+  install:
+    createNamespace: false
+
+  values:
+    env:
+      - name: DRUID_URL
+        value: "https://druid-iuneradruid-router:9088"
+      - name: INSECURE_TLS_VERIFY
+        value: "true"
+      - name: LOG_LEVEL
+        value: "info"
+      - name: HAS_MIDDLEMANAGER
+        value: "false"
+      - name: DRUID_USER
+        valueFrom:
+          secretKeyRef:
+            name: iuneradruid-auth-secrets
+            key: internalUser
+      - name: DRUID_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: iuneradruid-auth-secrets
+            key: internalClientPassword

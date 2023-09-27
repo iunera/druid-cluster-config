@@ -1,0 +1,721 @@
+# Grundlage ist das Sizing vom SingleServer Medium https://druid.apache.org/docs/latest/operations/single-server.html#medium-16-cpu-128gb-ram-i34xlarge
+
+apiVersion: "druid.apache.org/v1alpha1"
+kind: "Druid"
+metadata:
+  name: iuneradruid
+  namespace: druid
+spec:
+  commonConfigMountPath: /opt/druid/conf/druid/cluster/_common
+  rollingDeploy: false
+  startScript: /druid.sh
+  image: iunera/druid:29.0.1
+  imagePullPolicy: Always
+  podAnnotations:
+    reason: this-cluster-is-k8s-discovery
+  podLabels:
+    app.kubernetes.io/networkpolicy-group: druid
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+    runAsGroup: 1000
+  services:
+    - spec:
+        type: ClusterIP
+        clusterIP: None
+
+  log4j.config: |-
+    <?xml version="1.0" encoding="UTF-8" ?>
+    <Configuration status="INFO">
+      <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+          <PatternLayout pattern="%d{ISO8601} %p [%t] %c - %m%n"/>
+        </Console>
+      </Appenders>
+      <Loggers>
+        <Root level="info">
+          <AppenderRef ref="console"/>
+        </Root>
+        <Logger name="org.apache.druid.jetty.RequestLog" additivity="false" level="info">
+            <AppenderRef ref="console"/>
+        </Logger>
+        <Logger name="org.eclipse.jetty" additivity="false" level="info">
+            <AppenderRef ref="console"/>
+        </Logger>
+      </Loggers>
+    </Configuration>
+
+  jvm.options: |-
+    -server
+    -Dlog4j.debug="ERROR"
+    -Duser.timezone=UTC
+    -Dfile.encoding=UTF-8
+    -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
+    -Djava.io.tmpdir=/druid/data
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:HeapDumpPath=/opt/druid/var/
+  defaultProbes: false
+  # disablePVCDeletionFinalizer: true
+
+  common.runtime.properties: |
+
+    #
+    # Extensions
+    #
+    druid.extensions.loadList=["iu-code-ingestion-druid-extension", "druid-pac4j","druid-basic-security", "simple-client-sslcontext", "druid-multi-stage-query", "druid-distinctcount", "druid-s3-extensions", "druid-stats", "druid-histogram", "druid-datasketches", "druid-lookups-cached-global", "postgresql-metadata-storage", "druid-kafka-indexing-service", "druid-time-min-max", "druid-kubernetes-overlord-extensions", "druid-kubernetes-extensions"]
+
+    # ###############################################
+    # # service names for coordinator and overlord
+    # ###############################################
+    # druid.selectors.indexing.serviceName=druid/overlord
+    # druid.selectors.coordinator.serviceName=druid/coordinator
+
+    ##################################################
+    # Request logging, monitoring, and segment
+    ##################################################
+    druid.request.logging.type=slf4j
+    druid.request.logging.feed=requests
+
+    druid.extensions.directory=/opt/druid/extensions
+    # https://druid.apache.org/docs/latest/development/extensions.html
+    druid.query.segmentMetadata.defaultAnalysisTypes=["cardinality","size","interval","minmax"]
+
+    #
+    # AuthenticationChain contains 2 Authenticators. One for Clusterinternal Auth and technical users (db) and one for the human users using Azure AD Auth (pac4j)
+    # 
+    druid.auth.authenticatorChain=["db","pac4j"]
+
+    #
+    # Authentication via pac4j web user authenticator (OIDC
+    # https://druid.apache.org/docs/latest/development/extensions-core/druid-pac4j.html
+    #
+    druid.auth.authenticator.pac4j.name=pac4j
+    druid.auth.authenticator.pac4j.type=pac4j
+    druid.auth.authenticator.pac4j.authorizerName=pac4j
+
+    druid.auth.pac4j.oidc.scope=openid profile email
+    # druid.auth.pac4j.oidc.clientID=ENV_VAR_FROM_SECRET
+    # druid.auth.pac4j.oidc.clientSecret=ENV_VAR_FROM_SECRET
+    # druid.auth.pac4j.oidc.discoveryURI=ENV_VAR_FROM_SECRET
+    # druid.auth.pac4j.cookiePassphrase=ENV_VAR_FROM_SECRET
+
+    #
+    # Authentication via the Metastore Database (for internal Auth)
+    #
+    druid.auth.authenticator.db.type=basic
+    druid.auth.authenticator.db.skipOnFailure=true
+    druid.auth.authenticator.db.credentialsValidator.type=metadata
+    druid.auth.authenticator.db.authorizerName=db
+    # username admin
+    # druid.auth.authenticator.db.initialAdminPassword=ENV_VAR_FROM_SECRET
+    # druid.auth.authenticator.db.initialInternalClientPassword=ENV_VAR_FROM_SECRET
+    # druid.auth.basic.ssl.trustStorePath=/druid/jks/truststore.jks
+    # druid.auth.basic.ssl.protocol=TLS
+
+    #
+    # Authorization Configuration 
+    #
+    druid.auth.authorizers=["db", "pac4j"]
+
+    #
+    # DB authorizer via the Metastore Database
+    # 
+    druid.auth.authorizer.db.type=basic
+    druid.auth.authorizer.db.roleProvider.type=metadata
+
+    #
+    # allowAll Authorization via the pac4j Authorizer for OIDC Users
+    #
+    druid.auth.authorizer.pac4j.type=allowAll
+
+    #
+    # Cluster Internal Authorization (aka escalator) via the  Metastore Database
+    #
+    druid.escalator.type=basic
+    druid.escalator.authorizerName=db
+    # druid.escalator.internalClientUsername=ENV_VAR_FROM_SECRET
+    # druid.escalator.internalClientPassword=ENV_VAR_FROM_SECRET
+
+    #
+    # Enable sql
+    #
+    druid.sql.enable=true
+
+    # # Storage type of double columns
+    # # ommiting this will lead to index double as float at the storage layer
+    druid.indexing.doubleStorage=double
+
+    # druid.s3.endpoint.url=https://s3.fahrbar.iunera.com
+    # druid.s3.protocol=https
+    # druid.s3.enablePathStyleAccess=true
+    # https://druid.apache.org/docs/latest/development/extensions-core/s3.html#connecting-to-s3-configuration
+    # https://github.com/Gelerion/Druid-docker/blob/master/druid/conf/_common/common.runtime.properties_env#L50
+
+    druid.s3.endpoint.url=http://s3-minio.fahrbar-s3:9000
+    druid.s3.protocol=http
+    druid.s3.enablePathStyleAccess=true
+    # druid.s3.endpoint.signingRegion=eu-central-1
+    # druid.s3.accessKey=ENV_VAR_FROM_SECRET
+    # druid.s3.secretKey=ENV_VAR_FROM_SECRET
+    # druid.s3.accessKey=${AWS_ACCESS_KEY_ID}
+    # druid.s3.secretKey=${S3_SECRET_KEY}
+
+    druid.storage.type=local
+    druid.storage.storageDirectory=/var/druid/segments
+
+    #
+    # Service discovery via Kubernetes (K8S)
+    #
+    druid.zk.service.enabled=false
+    druid.serverview.type=http
+ 
+    druid.discovery.type=k8s
+    druid.discovery.k8s.clusterIdentifier=iuneradruid2023
+    druid.discovery.k8s.leaseDuration=PT60S
+    druid.discovery.k8s.renewDeadline=PT17S
+    druid.discovery.k8s.retryPeriod=PT5S
+
+    #
+    # Metastore Postgres
+    #
+    druid.metadata.storage.type=postgresql
+    druid.metadata.storage.connector.connectURI=jdbc:postgresql://postgres-postgresql-hl/postgres
+    druid.metadata.storage.connector.user=postgres
+    # druid.metadata.storage.connector.password=ENV_VAR_FROM_SECRET
+    druid.metadata.storage.connector.createTables=true
+
+    #
+    # TLS Settings
+    #
+    # global TLS settings
+    druid.enableTlsPort=true
+    # Disable non-TLS Ports
+    druid.enablePlaintextPort=false
+
+    # client side TLS settings
+    druid.client.https.protocol=TLSv1.2
+    druid.client.https.trustStoreType=jks
+    druid.client.https.trustStorePath=/druid/jks/truststore.jks
+    druid.client.https.trustStorePassword=changeit
+    druid.client.https.validateHostnames=false
+
+    # server side TLS settings
+    druid.server.https.keyStoreType=jks
+    druid.server.https.keyStorePath=/druid/jks/keystore.jks
+    # druid.server.https.keyStorePassword=ENV_VAR_FROM_SECRET
+    druid.server.https.certAlias=druid
+    druid.server.https.trustStoreType=jks
+    druid.server.https.trustStorePath=/druid/jks/truststore.jks
+    druid.server.https.trustStorePassword=changeit
+    druid.server.https.validateHostnames=false
+    druid.server.https.protocol=TLSv1.2
+    druid.server.https.includeCipherSuites=["TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"]
+    druid.server.https.excludeCipherSuites=["TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", "TLS_RSA_WITH_AES_256_GCM_SHA384", "TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384", "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "TLS_RSA_WITH_AES_128_GCM_SHA256", "TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256", "TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256", "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256", "TLS_DHE_DSS_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384", "TLS_RSA_WITH_AES_256_CBC_SHA256", "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384", "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384", "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256", "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256", "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA", "TLS_RSA_WITH_AES_256_CBC_SHA", "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA", "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA", "TLS_DHE_RSA_WITH_AES_256_CBC_SHA", "TLS_DHE_DSS_WITH_AES_256_CBC_SHA", "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256", "TLS_RSA_WITH_AES_128_CBC_SHA256", "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256", "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256", "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256", "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256", "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA", "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA", "TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA", "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA", "TLS_DHE_RSA_WITH_AES_128_CBC_SHA", "TLS_DHE_DSS_WITH_AES_128_CBC_SHA", "TLS_EMPTY_RENEGOTIATION_INFO_SCSV","TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"]
+
+    #
+    # Common Indexer Settings
+    #
+
+    druid.indexer.logs.type=s3
+    druid.indexer.logs.s3Bucket=indexinglogs
+    druid.indexer.logs.s3Prefix=iuneradruid
+    druid.indexer.logs.disableAcl=true
+
+    # Log retention
+    # https://druid.apache.org/docs/latest/configuration/index.html#log-retention-policy
+    druid.indexer.logs.kill.enabled=true
+    # 4 Weeks
+    druid.indexer.logs.kill.durationToRetain=2419200000
+    # 5m
+    druid.indexer.logs.kill.initialDelay=300000
+    # 3h
+    druid.indexer.logs.kill.delay=10800000
+
+    #
+    # Druids emmitted Metrics to druid-exporter
+    # results in "druid_emitted_metrics" in prometheus
+    druid.emitter.http.recipientBaseUrl=http://druid-exporter.druid:8080/druid
+    druid.emitter=http
+    druid.emitter.logging.logLevel=info
+    druid.monitoring.monitors=["org.apache.druid.java.util.metrics.JvmMonitor"]
+
+  #
+  # Clusterwide environment variables
+  #
+  env:
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
+    - name: POD_NAMESPACE
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+
+    # Access Minio S3 Settings
+    - name: AWS_REGION
+      valueFrom:
+        secretKeyRef:
+          name: iuneradruid-s3iam-secrets
+          key: AWS_REGION
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: iuneradruid-s3iam-secrets
+          key: AWS_ACCESS_KEY_ID
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: iuneradruid-s3iam-secrets
+          key: AWS_SECRET_ACCESS_KEY
+
+    - name: druid_s3_endpoint_signingRegion
+      valueFrom:
+        secretKeyRef:
+          name: iuneradruid-s3iam-secrets
+          key: AWS_REGION
+    - name: druid_s3_accessKey
+      valueFrom:
+        secretKeyRef:
+          name: iuneradruid-s3iam-secrets
+          key: AWS_ACCESS_KEY_ID
+    - name: druid_s3_secretKey
+      valueFrom:
+        secretKeyRef:
+          name: iuneradruid-s3iam-secrets
+          key: AWS_SECRET_ACCESS_KEY
+
+    # Postgres Password of user postgres (same Namespace)
+    - name: druid_metadata_storage_connector_password
+      valueFrom:
+        secretKeyRef:
+          name: iuneradruid-metastore-postgres-secret
+          key: postgres-password
+
+    # Druid Basic-Auth
+    - name: druid_auth_authenticator_db_initialAdminPassword
+      valueFrom: 
+        secretKeyRef:
+          name: iuneradruid-auth-secrets
+          key: initialAdminPassword
+    - name: druid_escalator_internalClientUsername
+      valueFrom: 
+        secretKeyRef:
+          name: iuneradruid-auth-secrets
+          key: internalUser
+    - name: druid_auth_authenticator_db_initialInternalClientPassword
+      valueFrom: 
+        secretKeyRef:
+          name: iuneradruid-auth-secrets
+          key: internalClientPassword
+    - name: druid_escalator_internalClientPassword
+      valueFrom: 
+        secretKeyRef:
+          name: iuneradruid-auth-secrets
+          key: internalClientPassword
+
+    # Azure AD / Pac4j / OIDC Auth
+    - name: druid_auth_pac4j_oidc_clientID
+      valueFrom: 
+        secretKeyRef:
+          name: iuneradruid-auth-secrets
+          key: pac4j-clientID
+    - name: druid_auth_pac4j_oidc_clientSecret
+      valueFrom: 
+        secretKeyRef:
+          name: iuneradruid-auth-secrets
+          key: pac4j-clientSecret
+    - name: druid_auth_pac4j_oidc_discoveryURI
+      valueFrom: 
+        secretKeyRef:
+          name: iuneradruid-auth-secrets
+          key: pac4j-discoveryURI
+    - name: druid_auth_pac4j_cookiePassphrase
+      valueFrom: 
+        secretKeyRef:
+          name: iuneradruid-auth-secrets
+          key: pac4j-cookiePassphrase
+
+    # TLS Keystore keystorepassword
+    - name: druid_server_https_keyStorePassword
+      valueFrom:
+        secretKeyRef:
+          name: iuneradruid-jks-keystores-secret
+          key: keystorepassword
+
+  # 
+  # Clusterwide volumes & mounts
+  #
+  volumeMounts:
+    - name: keystores
+      mountPath: /druid/jks
+      readOnly: true
+    - mountPath: /druid/data
+      name: tmp-dir
+
+  volumes:
+    - name: keystores
+      secret:
+        secretName: iuneradruid-jks-keystores-secret
+    - name: tmp-dir
+      emptyDir: {}
+
+  nodes:
+
+    # https://druid.apache.org/docs/latest/configuration/index.html#query-server
+    broker:
+      kind: StatefulSet
+      replicas: 1
+      maxSurge: 1
+      maxUnavailable: 0
+      druid.port: 8282
+      nodeConfigMountPath: /opt/druid/conf/druid/cluster/query/broker
+      nodeType: broker
+      readinessProbe:
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        failureThreshold: 30
+        httpGet:
+          path: /druid/broker/v1/readiness
+          port: 8282
+          scheme: HTTPS
+      resources:
+        limits:
+          memory: 32Gi
+        requests:
+          cpu: 1
+          memory: 17Gi
+
+      extra.jvm.options: |-
+        -server
+        -Xms8g
+        -Xmx8g
+        -XX:MaxDirectMemorySize=13g
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+UseG1GC
+        -Duser.timezone=UTC
+        -Dfile.encoding=UTF-8
+        -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
+      # -Djava.io.tmpdir=var/tmp
+      runtime.properties: |
+
+        druid.service=druid/broker
+
+        # working
+        druid.log4j2.sourceCategory=druid/broker
+        # druid.broker.http.numConnections=500
+        # Processing threads and buffers
+        # druid.processing.buffer.sizeBytes=268435456
+        # druid.processing.numMergeBuffers=2
+        # druid.processing.numThreads=11
+
+        # HTTP server settings
+        druid.server.http.numThreads=60
+
+        # HTTP client settings
+        druid.broker.http.numConnections=50
+        druid.broker.http.maxQueuedBytes=10MiB
+
+        # Processing threads and buffers
+        druid.processing.buffer.sizeBytes=1536MiB
+        druid.processing.numMergeBuffers=6
+        druid.processing.numThreads=1
+        # druid.processing.tmpDir=var/druid/processing
+        druid.query.groupBy.maxOnDiskStorage=2
+        druid.query.groupBy.maxMergingDictionarySize=300000000
+        # Query cache disabled -- push down caching and merging instead
+        druid.broker.cache.useCache=true
+        # druid.broker.cache.useCache war false CSH hats geändert weil https://druid.apache.org/docs/latest/querying/caching.html#using-and-populating-cache
+        druid.broker.cache.populateCache=true
+
+
+    # https://druid.apache.org/docs/latest/configuration/index.html#coordinator
+    coordinator:
+      kind: StatefulSet
+      druid.port: 8281
+      maxSurge: 2
+      maxUnavailable: 0
+      nodeConfigMountPath: /opt/druid/conf/druid/cluster/master/coordinator-overlord
+      nodeType: coordinator
+      replicas: 1
+
+      livenessProbe:
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 3
+        httpGet:
+          path: /status/health
+          port: 8281
+          scheme: HTTPS
+      readinessProbe:
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 3
+        httpGet:
+          path: /status/health
+          port: 8281
+          scheme: HTTPS
+
+      resources:
+        limits:
+          memory: 16Gi
+        requests:
+          cpu: 2
+          memory: 9Gi
+
+      extra.jvm.options: |-
+        -server
+        -Xms9g
+        -Xmx9g
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+UseG1GC
+        -Duser.timezone=UTC
+        -Dfile.encoding=UTF-8
+        -Djava.io.tmpdir=var/tmp
+        -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
+        -Dderby.stream.error.file=var/druid/derby.log
+
+      runtime.properties: |
+
+        druid.service=druid/coordinator
+        druid.log4j2.sourceCategory=druid/coordinator
+
+        druid.coordinator.balancer.strategy=cachingCost
+        druid.serverview.type=http
+
+        druid.indexer.storage.type=metadata
+        druid.coordinator.startDelay=PT10S
+        druid.coordinator.period=PT5S
+
+        # Run the overlord service in the coordinator process
+        druid.coordinator.asOverlord.enabled=false
+
+      volumeMounts:
+        - mountPath: /var/druid
+          name: deepstorage
+      volumes:
+        - name: deepstorage
+          persistentVolumeClaim:
+            claimName: iuneradruid-deepstorage
+
+    overlord:
+      nodeType: "overlord"
+      druid.port: 8290
+      nodeConfigMountPath: "/opt/druid/conf/druid/cluster/master/coordinator-overlord"
+      replicas: 1
+      resources:
+        limits:
+          memory: 2Gi
+        requests:
+          cpu: 1000m
+          memory: 2Gi
+      livenessProbe:
+        httpGet:
+          path: /status/health
+          port: 8290
+          scheme: HTTPS
+      readinessProbe:
+        httpGet:
+          path: /status/health
+          port: 8290
+          scheme: HTTPS
+      runtime.properties: |
+
+        druid.service=druid/overlord
+        # druid.coordinator.startDelay=PT10S
+        # druid.coordinator.period=PT5S
+
+        druid.indexer.queue.startDelay=PT5S
+
+        druid.indexer.fork.property.druid.processing.intermediaryData.storage.type=deepstore
+
+        druid.indexer.storage.type=metadata
+        druid.indexer.runner.namespace=druid
+
+        druid.indexer.task.encapsulatedTask=true
+
+        druid.indexer.runner.type=k8s
+        druid.indexer.queue.maxSize=30
+        druid.processing.intermediaryData.storage.type=deepstore
+
+        druid.indexer.runner.k8s.adapter.type=customTemplateAdapter
+        druid.indexer.runner.k8s.podTemplate.base=/druid/tasktemplate/default/default-task-template.yaml
+        druid.indexer.runner.primaryContainerName=main
+
+        druid.indexer.runner.debugJobs=false
+        druid.indexer.runner.maxTaskDuration=PT4H
+        druid.indexer.runner.taskCleanupDelay=PT2H
+        druid.indexer.runner.taskCleanupInterval=PT10M
+        druid.indexer.runner.K8sjobLaunchTimeout=PT1H
+        druid.indexer.runner.labels={"app.kubernetes.io/networkpolicy-group":"druid"}
+        druid.indexer.runner.graceTerminationPeriodSeconds=PT30S
+
+        # showing task  for 4 Weeks in WebUI
+        druid.indexer.storage.recentlyFinishedThreshold=P4W
+
+      extra.jvm.options: |-
+        -Xms2g
+        -Xmx2g
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+UseG1GC
+
+      volumeMounts:
+        - mountPath: /var/druid
+          name: deepstorage
+        - name: default-task-template
+          mountPath: /druid/tasktemplate/default/
+
+      volumes:
+        - name: deepstorage
+          persistentVolumeClaim:
+            claimName: iuneradruid-deepstorage
+        - name: default-task-template
+          configMap:
+            name: default-task-template
+
+    # https://druid.apache.org/docs/latest/configuration/index.html#historical
+    historical:
+      druid.port: 8283
+      kind: StatefulSet
+      nodeType: historical
+      nodeConfigMountPath: /opt/druid/conf/druid/cluster/data/historical
+      replicas: 1
+      livenessProbe:
+        initialDelaySeconds: 1800
+        periodSeconds: 5
+        failureThreshold: 3
+        httpGet:
+          path: /status/health
+          port: 8283
+          scheme: HTTPS
+      readinessProbe:
+        httpGet:
+          path: /druid/historical/v1/readiness
+          port: 8283
+          scheme: HTTPS
+        periodSeconds: 10
+        failureThreshold: 18
+      resources:
+        limits:
+          memory: 40Gi
+          ephemeral-storage: 220Gi
+        requests:
+          cpu: 1
+          memory: 16Gi
+          ephemeral-storage: 220Gi
+
+      extra.jvm.options: |-
+        -server
+        -Xms8g
+        -Xmx8g
+        -XX:MaxDirectMemorySize=13g
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+UseG1GC
+        -Duser.timezone=UTC
+        -Dfile.encoding=UTF-8
+        -Djava.io.tmpdir=var/tmp
+        -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
+
+      runtime.properties: |
+
+        druid.service=druid/historical
+        druid.log4j2.sourceCategory=druid/historical
+        # HTTP server threads
+        druid.server.http.numThreads=60
+
+        # Processing threads and buffers
+        druid.processing.buffer.sizeBytes=500MiB
+        # druid.processing.buffer.sizeBytes=1024MiB
+        # Error: Resource limit exceeded
+        # Not enough aggregation buffer space to execute this query. Try increasing druid.processing.buffer.sizeBytes or enable disk spilling by setting druid.query.groupBy.maxOnDiskStorage to a positive number.
+        druid.query.groupBy.maxOnDiskStorage=10000000000
+        # https://raygun.com/blog/druid-groupby-v2-engine/ 
+        # https://druid.apache.org/docs/latest/querying/groupbyquery.html#common-configurations-for-all-groupby-strategies
+        druid.processing.numMergeBuffers=4
+        druid.processing.numThreads=15
+        druid.processing.tmpDir=var/druid/processing
+
+        # Segment storage
+        druid.segmentCache.locations=[{"path":"/var/druid/segment-cache","maxSize":"200g"}]
+
+        # Query cache
+        druid.historical.cache.useCache=true
+        druid.historical.cache.populateCache=true
+        druid.cache.type=caffeine
+        druid.cache.sizeInBytes=256MiB
+
+        # druid.segmentCache.lazyLoadOnStart=true ## TODO lazy loading
+
+      volumeMounts:
+        - mountPath: /var/druid/segment-cache
+          name: segment-cache
+
+        - mountPath: /var/druid
+          name: deepstorage
+
+      volumes:
+        - name: deepstorage
+          persistentVolumeClaim:
+            claimName: iuneradruid-deepstorage
+        - name: segment-cache
+          emptyDir:
+            sizeLimit: 210Gi
+
+    router:
+      nodeType: "router"
+      druid.port: 9088
+      nodeConfigMountPath: "/opt/druid/conf/druid/cluster/query/router"
+      replicas: 1
+      livenessProbe:
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 3
+        httpGet:
+          path: /status/health
+          port: 9088
+          scheme: HTTPS
+      readinessProbe:
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 3
+        httpGet:
+          path: /status/health
+          port: 9088
+          scheme: HTTPS
+      resources:
+        limits:
+          memory: "2G"
+        requests:
+          cpu: 400m
+          memory: 1Gi
+      extra.jvm.options: |-
+        -server
+        -Xms512m
+        -Xmx512m
+        -XX:+UseG1GC
+        -XX:MaxDirectMemorySize=128m
+        -XX:+ExitOnOutOfMemoryError
+        -Duser.timezone=UTC
+        -Dfile.encoding=UTF-8
+        -Djava.io.tmpdir=var/tmp
+        -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
+      runtime.properties: |
+
+        druid.enablePlaintextPort=false
+        druid.tlsPort=9088
+
+        druid.service=druid/router
+        druid.log4j2.sourceCategory=druid/router
+
+        # HTTP proxy
+        druid.router.http.numConnections=50
+        druid.router.http.readTimeout=PT5M
+        druid.router.http.numMaxThreads=100
+        druid.server.http.numThreads=100
+
+        # Service discovery
+        druid.router.defaultBrokerServiceName=druid/broker
+        druid.router.coordinatorServiceName=druid/coordinator
+
+        # Management proxy to coordinator / overlord: required for unified web console.
+        druid.router.managementProxy.enabled=true

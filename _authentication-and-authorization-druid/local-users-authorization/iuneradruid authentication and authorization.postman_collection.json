@@ -1,0 +1,424 @@
+{
+	"info": {
+		"_postman_id": "d2e01c9a-a791-4140-8f71-45a6f41c6821",
+		"name": "iuneradruid authentication and authorization",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "3 LOCAL druid roles and permissions",
+			"item": [
+				{
+					"name": "create role",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "https://localhost:8281/druid-ext/basic-security/authorization/db/db/roles/readRole",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8281",
+							"path": [
+								"druid-ext",
+								"basic-security",
+								"authorization",
+								"db",
+								"db",
+								"roles",
+								"readRole"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "show roles",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "https://localhost:8281/druid-ext/basic-security/authorization/db/db/roles/",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8281",
+							"path": [
+								"druid-ext",
+								"basic-security",
+								"authorization",
+								"db",
+								"db",
+								"roles",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add permissions to a role",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"resource\": {\n            \"name\": \".*\",\n            \"type\": \"DATASOURCE\"\n        },\n        \"action\": \"READ\"\n    },\n    {\n        \"resource\": {\n            \"name\": \".*\",\n            \"type\": \"STATE\"\n        },\n        \"action\": \"READ\"\n    },\n    {\n        \"resource\": {\n            \"name\": \".*\",\n            \"type\": \"CONFIG\"\n        },\n        \"action\": \"READ\"\n    },\n    {\n    \"resource\": {\n        \"name\": \"EXTERNAL\",\n        \"type\": \"EXTERNAL\"\n    },\n    \"action\": \"READ\"\n    }\n]"
+						},
+						"url": {
+							"raw": "https://localhost:8281/druid-ext/basic-security/authorization/db/db/roles/readRole/permissions",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8281",
+							"path": [
+								"druid-ext",
+								"basic-security",
+								"authorization",
+								"db",
+								"db",
+								"roles",
+								"readRole",
+								"permissions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "show readRole",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "https://localhost:8281/druid-ext/basic-security/authorization/db/db/roles/readRole",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8281",
+							"path": [
+								"druid-ext",
+								"basic-security",
+								"authorization",
+								"db",
+								"db",
+								"roles",
+								"readRole"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4 LOCAL Users and Mappings",
+			"item": [
+				{
+					"name": "show local users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "https://localhost:8281/druid-ext/basic-security/authentication/db/db/users",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8281",
+							"path": [
+								"druid-ext",
+								"basic-security",
+								"authentication",
+								"db",
+								"db",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create local user queryuser in authentication",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8281/druid-ext/basic-security/authentication/db/db/users/queryuser",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8281",
+							"path": [
+								"druid-ext",
+								"basic-security",
+								"authentication",
+								"db",
+								"db",
+								"users",
+								"queryuser"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "assign Password to User queryuser",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8281/druid-ext/basic-security/authentication/db/db/users/queryuser/credentials",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8281",
+							"path": [
+								"druid-ext",
+								"basic-security",
+								"authentication",
+								"db",
+								"db",
+								"users",
+								"queryuser",
+								"credentials"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "show local user queryuser in authentication",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "https://localhost:8281/druid-ext/basic-security/authentication/db/db/users/queryuser",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8281",
+							"path": [
+								"druid-ext",
+								"basic-security",
+								"authentication",
+								"db",
+								"db",
+								"users",
+								"queryuser"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create local user queryuser in authorization",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8281/druid-ext/basic-security/authorization/db/db/users/queryuser",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8281",
+							"path": [
+								"druid-ext",
+								"basic-security",
+								"authorization",
+								"db",
+								"db",
+								"users",
+								"queryuser"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "map user queryuser to role readRole",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8281/druid-ext/basic-security/authorization/db/db/users/queryuser/roles/readRole",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8281",
+							"path": [
+								"druid-ext",
+								"basic-security",
+								"authorization",
+								"db",
+								"db",
+								"users",
+								"queryuser",
+								"roles",
+								"readRole"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "show local user queryuser in authorization",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "https://localhost:8281/druid-ext/basic-security/authorization/db/db/users/queryuser?full",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8281",
+							"path": [
+								"druid-ext",
+								"basic-security",
+								"authorization",
+								"db",
+								"db",
+								"users",
+								"queryuser"
+							],
+							"query": [
+								{
+									"key": "full",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "admin",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
