@@ -715,14 +715,3 @@ spec:
 
         # Management proxy to coordinator / overlord: required for unified web console.
         druid.router.managementProxy.enabled=true
-
-      # affinity:
-      #   nodeAffinity:
-      #     preferredDuringSchedulingIgnoredDuringExecution:
-      #     - weight: 1
-      #       preference:
-      #         matchExpressions:
-      #         - key: role
-      #           operator: In
-      #           values:
-      #           - service-node
