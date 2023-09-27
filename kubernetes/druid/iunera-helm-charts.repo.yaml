@@ -1,0 +1,11 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: iunera-helm-charts
+  namespace: druid
+spec:
+  interval: 5m0s
+  timeout: 1m0s
+  url: https://iunera.github.io/helm-charts
+

@@ -1,0 +1,243 @@
+# https://druid.apache.org/docs/latest/development/extensions-contrib/k8s-jobs/
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: default-task-template
+  namespace: druid
+data:
+  default-task-template.yaml: |+
+
+    apiVersion: v1
+    kind: PodTemplate
+    metadata:
+      name: druid
+      annotations:
+        dummy-annotation: "dummy"
+      labels:
+        dummy-label: "dummy"
+    template:
+      spec:
+        restartPolicy: Never
+        serviceAccount: default
+        serviceAccountName: default
+        securityContext:
+          fsGroup: 1000
+          runAsGroup: 1000
+          runAsUser: 1000
+
+        containers:
+        - name: main
+          image: iunera/druid:29.0.1
+          imagePullPolicy: Always
+          command:
+          - sh
+          - -c
+          args:
+          - /peon.sh /druid/data 1 --loadBroadcastSegments true 
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: druid_host
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: status.podIP
+          - name: HOSTNAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          # Access Minio S3 Settings
+          - name: AWS_REGION
+            valueFrom:
+              secretKeyRef:
+                name: iuneradruid-s3iam-secrets
+                key: AWS_REGION
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: iuneradruid-s3iam-secrets
+                key: AWS_ACCESS_KEY_ID
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: iuneradruid-s3iam-secrets
+                key: AWS_SECRET_ACCESS_KEY
+
+          - name: druid_s3_endpoint_signingRegion
+            valueFrom:
+              secretKeyRef:
+                name: iuneradruid-s3iam-secrets
+                key: AWS_REGION
+          - name: druid_s3_accessKey
+            valueFrom:
+              secretKeyRef:
+                name: iuneradruid-s3iam-secrets
+                key: AWS_ACCESS_KEY_ID
+          - name: druid_s3_secretKey
+            valueFrom:
+              secretKeyRef:
+                name: iuneradruid-s3iam-secrets
+                key: AWS_SECRET_ACCESS_KEY
+
+          # TLS Keystore
+          - name: druid_server_https_keyStorePassword
+            valueFrom:
+              secretKeyRef:
+                name: iuneradruid-jks-keystores-secret
+                key: keystorepassword
+          # Postgres Password of user postgres (same Namespace)
+          - name: druid_metadata_storage_connector_password
+            valueFrom:
+              secretKeyRef:
+                name: iuneradruid-metastore-postgres-secret
+                key: postgres-password
+          # Druid Basic-Auth
+          - name: druid_auth_authenticator_db_initialAdminPassword
+            valueFrom: 
+              secretKeyRef:
+                name: iuneradruid-auth-secrets
+                key: initialAdminPassword
+          - name: druid_escalator_internalClientUsername
+            valueFrom: 
+              secretKeyRef:
+                name: iuneradruid-auth-secrets
+                key: internalUser
+          - name: druid_auth_authenticator_db_initialInternalClientPassword
+            valueFrom: 
+              secretKeyRef:
+                name: iuneradruid-auth-secrets
+                key: internalClientPassword
+          - name: druid_escalator_internalClientPassword
+            valueFrom: 
+              secretKeyRef:
+                name: iuneradruid-auth-secrets
+                key: internalClientPassword
+          # Azure AD / Pac4j / OIDC Auth
+          - name: druid_auth_pac4j_oidc_clientID
+            valueFrom: 
+              secretKeyRef:
+                name: iuneradruid-auth-secrets
+                key: pac4j-clientID
+          - name: druid_auth_pac4j_oidc_clientSecret
+            valueFrom: 
+              secretKeyRef:
+                name: iuneradruid-auth-secrets
+                key: pac4j-clientSecret
+          - name: druid_auth_pac4j_oidc_discoveryURI
+            valueFrom: 
+              secretKeyRef:
+                name: iuneradruid-auth-secrets
+                key: pac4j-discoveryURI
+          - name: druid_auth_pac4j_cookiePassphrase
+            valueFrom: 
+              secretKeyRef:
+                name: iuneradruid-auth-secrets
+                key: pac4j-cookiePassphrase
+          # Java optionals
+          - name: JAVA_OPTS
+            value: -Ddruid.tlsPort=8091 -Ddruid.task.executor.tlsPort=8091
+              -Ddruid.task.executor.enableTlsPort=true
+
+          ports:
+          - containerPort: 8091
+            name: druid-port
+            protocol: TCP
+
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 4Gi
+            requests:
+              cpu: 250m
+              memory: 2Gi
+
+          volumeMounts:
+          - mountPath: /opt/druid/conf/druid/cluster/_common
+            name: common-config-volume
+            readOnly: true
+          - mountPath: /opt/druid/conf/druid/cluster/master/coordinator-overlord
+            name: nodetype-config-volume
+            readOnly: true
+          - mountPath: /druid/jks
+            name: keystores
+            readOnly: true
+          - mountPath: /var/druid
+            name: deepstorage
+          - mountPath: /druid/data
+            name: tmp-dir
+
+        volumes:
+        # configmaps
+        - name: common-config-volume
+          configMap:
+            name: iuneradruid-druid-common-config
+            defaultMode: 420
+        - name: nodetype-config-volume
+          configMap:
+            defaultMode: 420
+            name: default-task-template
+        # secrets
+        - name: keystores
+          secret:
+            secretName: iuneradruid-jks-keystores-secret
+            defaultMode: 420
+        # storage
+        - name: deepstorage
+          persistentVolumeClaim:
+            claimName: iuneradruid-deepstorage
+        - name: tmp-dir
+          emptyDir: {}
+
+  jvm.config: |-
+
+      -server
+      -Duser.timezone=UTC
+      -Dfile.encoding=UTF-8
+      -Dlog4j.debug
+      -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
+      -Djava.io.tmpdir=/druid/data
+      -Xms4G
+      -Xmx4G
+      -XX:MaxDirectMemorySize=4g
+
+
+  runtime.properties: |
+
+      druid.port=8091
+      druid.service=druid/peon
+      # # druid.processing.buffer.sizeBytes * (druid.processing.numMergeBuffers + druid.processing.numThreads + 1)
+      # druid.server.http.numThreads=2
+      # druid.processing.numMergeBuffers=1
+      druid.indexer.task.baseTaskDir=/druid/data
+      druid.indexer.runner.type=k8s
+      druid.peon.mode=remote
+      druid.indexer.task.encapsulatedTask=true
+      druid.indexer.fork.property.druid.processing.intermediaryData.storage.type=deepstore
+
+      #https://druid.apache.org/docs/latest/configuration/#peon-caching
+      druid.realtime.cache.useCache=true
+
+  log4j2.xml: |-
+    <?xml version="1.0" encoding="UTF-8" ?>
+    <Configuration status="INFO">
+      <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+          <PatternLayout pattern="%d{ISO8601} %p [%t] %c - %m%n"/>
+        </Console>
+      </Appenders>
+      <Loggers>
+        <Root level="info">
+          <AppenderRef ref="console"/>
+        </Root>
+      </Loggers>
+    </Configuration>

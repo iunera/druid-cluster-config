@@ -1,0 +1,39 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: iuneradruid-cluster
+  namespace: druid
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - '*'
+  verbs:
+  - '*'
+
+- apiGroups:
+  - "batch"
+  resources:
+  - '*'
+  verbs:
+  - '*'
+
+- apiGroups:
+  - "*"
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: iuneradruid-cluster
+  namespace: druid
+subjects:
+- kind: ServiceAccount
+  name: default
+roleRef:
+  kind: Role
+  name: iuneradruid-cluster
+  apiGroup: rbac.authorization.k8s.io
