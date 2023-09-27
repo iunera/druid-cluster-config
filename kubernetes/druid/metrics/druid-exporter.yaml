@@ -26,15 +26,18 @@ spec:
           value: "true"
         - name: LOG_LEVEL
           value: "info"
-        # image: quay.io/opstree/druid-exporter:v0.9
-        # quay.io/opstree/druid-exporter:v0.9
-        # quay.io/opstree/druid-exporter@sha256:894ef1255e8367d1954bcd73516d7215ab3c7e1ddf5acacf45ad2453e5423f38
-        # der sha entspricht dem tag v0.9
-        # https://quay.io/repository/opstree/druid-exporter?tab=tags
-        # im zuge von https://github.com/opstree/druid-exporter/issues/74 haben die Jungs einfach den tag neu gesetzt. Um sicher zu gehen, dass das nicht wieder passiert nehmen wir den sha
-        # image: quay.io/opstree/druid-exporter@sha256:9f01c9c5c2e3c9eb0444f8855771397bdf31e174580f45afefbae15330c5b6d6
-        image: iunera/druid-exporter:v0.12.6
-        # docker pull quay.io/opstree/druid-exporter@sha256:9f01c9c5c2e3c9eb0444f8855771397bdf31e174580f45afefbae15330c5b6d6
+        - name: DRUID_USER
+          valueFrom:
+            secretKeyRef:
+              name: iuneradruid-auth-secrets
+              key: internalUser
+        - name: DRUID_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: iuneradruid-auth-secrets
+              key: internalClientPassword
+        # image: iunera/druid-exporter:v0.12.6
+        image: iunera/druid-exporter:v0.12.7-3
         imagePullPolicy: Always
         name: druid-exporter
         ports:
