@@ -1,0 +1,71 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: druid-exporter
+  namespace: druid
+spec:
+  selector:
+    matchLabels:
+      druid: metrics
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        druid: metrics
+    spec:
+      containers:
+      - env:
+        - name: DRUID_URL
+          value: "https://druid-iuneradruid-router:9088"
+        - name: INSECURE_TLS_VERIFY
+          value: "true"
+        - name: LOG_LEVEL
+          value: "info"
+        # image: quay.io/opstree/druid-exporter:v0.9
+        # quay.io/opstree/druid-exporter:v0.9
+        # quay.io/opstree/druid-exporter@sha256:894ef1255e8367d1954bcd73516d7215ab3c7e1ddf5acacf45ad2453e5423f38
+        # der sha entspricht dem tag v0.9
+        # https://quay.io/repository/opstree/druid-exporter?tab=tags
+        # im zuge von https://github.com/opstree/druid-exporter/issues/74 haben die Jungs einfach den tag neu gesetzt. Um sicher zu gehen, dass das nicht wieder passiert nehmen wir den sha
+        # image: quay.io/opstree/druid-exporter@sha256:9f01c9c5c2e3c9eb0444f8855771397bdf31e174580f45afefbae15330c5b6d6
+        image: iunera/druid-exporter:v0.12.6
+        # docker pull quay.io/opstree/druid-exporter@sha256:9f01c9c5c2e3c9eb0444f8855771397bdf31e174580f45afefbae15330c5b6d6
+        imagePullPolicy: Always
+        name: druid-exporter
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+
+        resources:
+          limits:
+            memory: "64Mi"
+            cpu: "500m"
+          requests:
+            memory: "16Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    druid: metrics
+  name: druid-exporter
+  namespace: druid
+  annotations:
+    prometheus.io/path: /metrics
+    prometheus.io/port: '8080'
+    prometheus.io/scrape: 'true'
+spec:
+  ports:
+  - name: metrics
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    druid: metrics
+  type: ClusterIP

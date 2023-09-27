@@ -1,0 +1,56 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: postgres
+  namespace: druid
+spec:
+  releaseName: postgres
+  targetNamespace: druid
+  chart:
+    spec:
+      chart: postgresql
+      version: ">=12.5.8 <13.0.0"
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami-charts
+        namespace: helmrepos
+  interval: 1m0s
+  install:
+    createNamespace: false
+
+  values:
+    global:
+      storageClass: ""
+      postgresql:
+        ## @param global.postgresql.auth.postgresPassword Password for the "postgres" admin user (overrides `auth.postgresPassword`)
+        ## @param global.postgresql.auth.username Name for a custom user to create (overrides `auth.username`)
+        ## @param global.postgresql.auth.password Password for the custom user to create (overrides `auth.password`)
+        ## @param global.postgresql.auth.database Name for a custom database to create (overrides `auth.database`)
+        ## @param global.postgresql.auth.existingSecret Name of existing secret to use for PostgreSQL credentials (overrides `auth.existingSecret`).
+        ## @param global.postgresql.auth.secretKeys.adminPasswordKey Name of key in existing secret to use for PostgreSQL credentials (overrides `auth.secretKeys.adminPasswordKey`). Only used when `global.postgresql.auth.existingSecret` is set.
+        ## @param global.postgresql.auth.secretKeys.userPasswordKey Name of key in existing secret to use for PostgreSQL credentials (overrides `auth.secretKeys.userPasswordKey`). Only used when `global.postgresql.auth.existingSecret` is set.
+        ## @param global.postgresql.auth.secretKeys.replicationPasswordKey Name of key in existing secret to use for PostgreSQL credentials (overrides `auth.secretKeys.replicationPasswordKey`). Only used when `global.postgresql.auth.existingSecret` is set.
+        ##
+        auth:
+          username: postgres
+          existingSecret: iuneradruid-metastore-postgres-secret
+          secretKeys:
+            adminPasswordKey: postgres-password
+
+    auth:
+      database: postgres
+
+    primary:
+      persistence:
+        enabled: true
+        existingClaim: iuneradruid-metastore-postgres-pvc
+
+      labels: 
+        app.kubernetes.io/networkpolicy-group: druid
+      annotations: {}
+      podLabels:
+        app.kubernetes.io/networkpolicy-group: druid
+
+    metrics:
+      enabled: true
