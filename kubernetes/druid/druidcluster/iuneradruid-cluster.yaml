@@ -64,7 +64,7 @@ spec:
     #
     # Extensions
     #
-    druid.extensions.loadList=["druid-pac4j","druid-basic-security", "simple-client-sslcontext", "druid-multi-stage-query", "druid-distinctcount", "druid-s3-extensions", "druid-stats", "druid-histogram", "druid-datasketches", "druid-lookups-cached-global", "postgresql-metadata-storage", "druid-kafka-indexing-service", "druid-time-min-max", "druid-kubernetes-overlord-extensions", "druid-kubernetes-extensions"]
+    druid.extensions.loadList=["druid-example-extension", "druid-pac4j","druid-basic-security", "simple-client-sslcontext", "druid-multi-stage-query", "druid-distinctcount", "druid-s3-extensions", "druid-stats", "druid-histogram", "druid-datasketches", "druid-lookups-cached-global", "postgresql-metadata-storage", "druid-kafka-indexing-service", "druid-time-min-max", "druid-kubernetes-overlord-extensions", "druid-kubernetes-extensions"]
 
     # ###############################################
     # # service names for coordinator and overlord
