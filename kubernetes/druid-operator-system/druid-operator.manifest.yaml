@@ -12694,6 +12694,13 @@ spec:
         runAsUser: 65532
       serviceAccountName: druid-operator
       terminationGracePeriodSeconds: 10
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
 ---
 # Source: druid-operator/templates/rbac_manager.yaml
 # Split WATCH_NAMESPACE by commas and loop on them
