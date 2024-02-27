@@ -155,7 +155,7 @@ spec:
     # https://druid.apache.org/docs/latest/development/extensions-core/s3.html#connecting-to-s3-configuration
     # https://github.com/Gelerion/Druid-docker/blob/master/druid/conf/_common/common.runtime.properties_env#L50
 
-    druid.s3.endpoint.url=http://s3-minio.fahrbar-common:9000
+    druid.s3.endpoint.url=http://s3-minio.fahrbar-s3:9000
     druid.s3.protocol=http
     druid.s3.enablePathStyleAccess=true
     # druid.s3.endpoint.signingRegion=eu-central-1
