@@ -9,7 +9,6 @@ spec:
   commonConfigMountPath: /opt/druid/conf/druid/cluster/_common
   rollingDeploy: false
   startScript: /druid.sh
-  # image: apache/druid:28.0.0
   image: iunera/druid:29.0.1
   imagePullPolicy: Always
   podAnnotations:
@@ -55,8 +54,6 @@ spec:
     -Djava.io.tmpdir=/druid/data
     -XX:+HeapDumpOnOutOfMemoryError
     -XX:HeapDumpPath=/opt/druid/var/
-# -Dcom.sun.management.jmxremote.authenticate=false
-# -Dcom.sun.management.jmxremote.ssl=false
   defaultProbes: false
   # disablePVCDeletionFinalizer: true
 
@@ -78,7 +75,6 @@ spec:
     ##################################################
     druid.request.logging.type=slf4j
     druid.request.logging.feed=requests
-
 
     druid.extensions.directory=/opt/druid/extensions
     # https://druid.apache.org/docs/latest/development/extensions.html
@@ -426,7 +422,7 @@ spec:
         druid.broker.cache.populateCache=true
 
 
-# https://druid.apache.org/docs/latest/configuration/index.html#coordinator
+    # https://druid.apache.org/docs/latest/configuration/index.html#coordinator
     coordinator:
       kind: StatefulSet
       druid.port: 8281
@@ -494,7 +490,6 @@ spec:
         - name: deepstorage
           persistentVolumeClaim:
             claimName: iuneradruid-deepstorage
-
 
     overlord:
       nodeType: "overlord"
@@ -568,9 +563,7 @@ spec:
           configMap:
             name: default-task-template
 
-
-
-# https://druid.apache.org/docs/latest/configuration/index.html#historical
+    # https://druid.apache.org/docs/latest/configuration/index.html#historical
     historical:
       druid.port: 8283
       kind: StatefulSet
@@ -633,7 +626,6 @@ spec:
         druid.processing.tmpDir=var/druid/processing
 
         # Segment storage
-        # druid.segmentCache.locations=[{"path":"/var/druid/segment-cache","maxSize":40GiB}]
         druid.segmentCache.locations=[{"path":"/var/druid/segment-cache","maxSize":"200g"}]
 
         # Query cache

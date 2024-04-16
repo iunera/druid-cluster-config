@@ -1,0 +1,23 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: druid-historical
+  namespace: druid
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: druid-iuneradruid-historical
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Pods
+      pods:
+        metric:
+          name: druid_historical_usage_percent
+          selector:
+            matchLabels:
+              druid: metrics
+        target:
+          type: AverageValue
+          averageValue: 88000m # equivalent to 85% filling

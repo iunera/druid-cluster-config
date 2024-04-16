@@ -8,11 +8,6 @@ spec:
   selector:
     matchLabels:
       druid: metrics
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -38,13 +33,12 @@ spec:
             secretKeyRef:
               name: iuneradruid-auth-secrets
               key: internalClientPassword
-        image: iunera/druid-exporter:v0.12.9
+        image: iunera/druid-exporter:dev-0.20.1
         imagePullPolicy: Always
         name: druid-exporter
         ports:
         - containerPort: 8080
           protocol: TCP
-
         resources:
           limits:
             memory: "64Mi"
