@@ -26,6 +26,8 @@ spec:
           value: "true"
         - name: LOG_LEVEL
           value: "info"
+        - name: HAS_MIDDLEMANAGER
+          value: "false"
         - name: DRUID_USER
           valueFrom:
             secretKeyRef:
@@ -36,8 +38,7 @@ spec:
             secretKeyRef:
               name: iuneradruid-auth-secrets
               key: internalClientPassword
-        # image: iunera/druid-exporter:v0.12.6
-        image: iunera/druid-exporter:v0.12.7-3
+        image: iunera/druid-exporter:v0.12.9
         imagePullPolicy: Always
         name: druid-exporter
         ports:
