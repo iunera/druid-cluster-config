@@ -238,7 +238,7 @@ spec:
     druid.emitter.http.recipientBaseUrl=http://druid-exporter.druid:8080/druid
     druid.emitter=http
     druid.emitter.logging.logLevel=info
-    druid.monitoring.monitors=["org.apache.druid.java.util.metrics.JvmMonitor"]
+    # druid.monitoring.monitors=["org.apache.druid.java.util.metrics.JvmMonitor"]
 
   #
   # Clusterwide environment variables
