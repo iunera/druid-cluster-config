@@ -225,8 +225,8 @@ spec:
     # Log retention
     # https://druid.apache.org/docs/latest/configuration/index.html#log-retention-policy
     druid.indexer.logs.kill.enabled=true
-    # 24h
-    druid.indexer.logs.kill.durationToRetain=86400000
+    # 4 Weeks
+    druid.indexer.logs.kill.durationToRetain=2419200000
     # 5m
     druid.indexer.logs.kill.initialDelay=300000
     # 3h
@@ -550,6 +550,9 @@ spec:
         druid.indexer.runner.K8sjobLaunchTimeout=PT1H
         druid.indexer.runner.labels={"app.kubernetes.io/networkpolicy-group":"druid"}
         druid.indexer.runner.graceTerminationPeriodSeconds=PT30S
+
+        # showing task  for 4 Weeks in WebUI
+        druid.indexer.storage.recentlyFinishedThreshold=P4W
 
       extra.jvm.options: |-
         -Xms2g
