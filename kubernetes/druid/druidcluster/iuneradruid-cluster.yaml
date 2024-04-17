@@ -232,6 +232,14 @@ spec:
     # 3h
     druid.indexer.logs.kill.delay=10800000
 
+    #
+    # Druids emmitted Metrics to druid-exporter
+    # results in "druid_emitted_metrics" in prometheus
+    druid.emitter.http.recipientBaseUrl=http://druid-exporter.druid:8080/druid
+    druid.emitter=http
+    druid.emitter.logging.logLevel=info
+    druid.monitoring.monitors=["org.apache.druid.java.util.metrics.JvmMonitor"]
+
   #
   # Clusterwide environment variables
   #

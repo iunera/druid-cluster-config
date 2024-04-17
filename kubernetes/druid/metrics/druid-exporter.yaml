@@ -1,69 +1,40 @@
----
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
 metadata:
   name: druid-exporter
   namespace: druid
 spec:
-  selector:
-    matchLabels:
-      druid: metrics
-  template:
-    metadata:
-      labels:
-        druid: metrics
+  releaseName: druid-exporter
+  targetNamespace: druid
+  chart:
     spec:
-      containers:
-      - env:
-        - name: DRUID_URL
-          value: "https://druid-iuneradruid-router:9088"
-        - name: INSECURE_TLS_VERIFY
-          value: "true"
-        - name: LOG_LEVEL
-          value: "info"
-        - name: HAS_MIDDLEMANAGER
-          value: "false"
-        - name: DRUID_USER
-          valueFrom:
-            secretKeyRef:
-              name: iuneradruid-auth-secrets
-              key: internalUser
-        - name: DRUID_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: iuneradruid-auth-secrets
-              key: internalClientPassword
-        image: iunera/druid-exporter:dev-0.20.1
-        imagePullPolicy: Always
-        name: druid-exporter
-        ports:
-        - containerPort: 8080
-          protocol: TCP
-        resources:
-          limits:
-            memory: "64Mi"
-            cpu: "500m"
-          requests:
-            memory: "16Mi"
-            cpu: "100m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    druid: metrics
-  name: druid-exporter
-  namespace: druid
-  annotations:
-    prometheus.io/path: /metrics
-    prometheus.io/port: '8080'
-    prometheus.io/scrape: 'true'
-spec:
-  ports:
-  - name: metrics
-    port: 8080
-    protocol: TCP
-    targetPort: 8080
-  selector:
-    druid: metrics
-  type: ClusterIP
+      chart: druid-exporter
+      version: ">=0.20.0"
+      sourceRef:
+        kind: HelmRepository
+        name: iunera-helm-charts
+        namespace: druid
+  interval: 10m0s
+  install:
+    createNamespace: false
+
+  values:
+    env:
+      - name: DRUID_URL
+        value: "https://druid-iuneradruid-router:9088"
+      - name: INSECURE_TLS_VERIFY
+        value: "true"
+      - name: LOG_LEVEL
+        value: "info"
+      - name: HAS_MIDDLEMANAGER
+        value: "false"
+      - name: DRUID_USER
+        valueFrom:
+          secretKeyRef:
+            name: iuneradruid-auth-secrets
+            key: internalUser
+      - name: DRUID_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: iuneradruid-auth-secrets
+            key: internalClientPassword
