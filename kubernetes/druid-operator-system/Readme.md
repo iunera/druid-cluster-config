@@ -1,5 +1,5 @@
-# Manuelle Manifest Generation
+# Manual Manifest Generation
 
 ```
-helm -n druid-operator-system template druid-operator /Users/chris/git/github/schmichri/druid-operator/chart  --set env.WATCH_NAMESPACE="druid" > druid-operator.manifest.yaml
+helm -n druid-operator-system template druid-operator ./druid-operator/chart --set env.WATCH_NAMESPACE="druid" | tee druid-operator.manifest.yaml
 ```
