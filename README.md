@@ -2,8 +2,9 @@
 
 This repo contains the Configuration of a production-ready kubernetes-native Apache Druid cluster based on [druid-operator](https://github.com/datainfrahq/druid-operator) and [fluxcd](https://fluxcd.io/flux/components/kustomize/kustomizations/) as gitops tool. 
 * Kubernetes-native means that there are ...
-  *  no zookeeper in place for service discovery 😍
-  *  middlemanager are replaced by kubernetes jobs which allows use to utilize cluster autoscaling 😍
+  * no zookeeper in place for service discovery 😍
+  * middlemanager are replaced by kubernetes jobs which allows use to utilize cluster autoscaling 😍
+  * horizontal pod autoscaling (HPA) for historical nodes 
 * Production-ready means:
   * TLS Encryption on all components
   * OAuth2 Login with Druids UI
