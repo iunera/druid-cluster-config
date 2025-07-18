@@ -85,6 +85,9 @@ spec:
     # 
     druid.auth.authenticatorChain=["db","pac4j"]
 
+    druid.server.hiddenProperties=["druid.metadata.storage.connector.password","druid.s3.secretKey","druid.s3.accessKey","druid.escalator.internalClientPassword","druid.server.https.keyStorePassword","druid.server.https.trustStorePassword","druid.client.https.trustStorePassword","druid.auth.authenticator.db.initialInternalClientPassword","druid.auth.authenticator.db.initialAdminPassword","druid.auth.pac4j.oidc.clientSecret","druid.auth.pac4j.cookiePassphrase","druid.auth.pac4j.oidc.clientID","druid.auth.pac4j.oidc.discoveryURI","druid.metadata.storage.connector.connectURI","druid.metadata.storage.connector.user","druid.escalator.internalClientUsername","druid.s3.endpoint.url","druid.indexer.logs.s3Bucket","druid.indexer.logs.s3Prefix",".*[Pp]assword.*",".*[Ss]ecret.*",".*[Kk]ey.*",".*[Tt]oken.*",".*[Cc]redential.*",".*[Aa]uth.*",".*[Cc]ookie.*",".*[Kk]eystore.*",".*[Tt]ruststore.*",".*[Jj]wt.*",".*[Oo]auth.*",".*[Oo]idc.*",".*[Ss]sl.*",".*[Tt]ls.*",".*[Aa]pi[Kk]ey.*",".*[Aa]pi[Ss]ecret.*",".*[Bb]earer.*",".*[Aa]ccess[Tt]oken.*",".*[Rr]efresh[Tt]oken.*",".*[Pp]rivate[Kk]ey.*",".*[Pp]ublic[Kk]ey.*",".*[Ss]igning[Kk]ey.*",".*[Ee]ncryption[Kk]ey.*",".*[Dd]ecryption[Kk]ey.*",".*[Cc]ertificate.*",".*[Aa]ws.*",".*[Aa]zure.*",".*[Gg]cp.*",".*[Cc]onnectURI.*",".*[Bb]ucket.*",".*[Ee]ndpoint.*",".*[Cc]lient[Ii]d.*",".*[Dd]iscovery.*",".*[Uu]sername.*"]
+
+    
     #
     # Authentication via pac4j web user authenticator (OIDC
     # https://druid.apache.org/docs/latest/development/extensions-core/druid-pac4j.html
