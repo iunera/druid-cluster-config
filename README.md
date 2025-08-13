@@ -12,6 +12,14 @@ This repo contains the Configuration of a production-ready kubernetes-native Apa
   * Authorization Concept for different tiers of access
   * Observability is ensured by the enhanced druid-exporter features
 
+## Background and further reading
+
+For architectural context and step-by-step guides to running a production-ready, Kubernetes-native Apache Druid cluster (ZooKeeper-less, MiddleManager-less, TLS, and GitOps with FluxCD and druid-operator), see these in-depth articles:
+
+- [Infrastructure setup for enterprise Apache Druid on Kubernetes — building the foundation](https://www.iunera.com/kraken/big-data-lessons/infrastructure-setup-for-enterprise-apache-druid-on-kubernetes-building-the-foundation/)
+- [Installing a production-ready Apache Druid cluster on Kubernetes (Part 2) — Druid deployment preparation](https://www.iunera.com/kraken/big-data-lessons/installing-a-production-ready-apache-druid-cluster-on-kubernetes-part-2-druid-deployment-preparation/)
+- [Apache Druid on Kubernetes: production-ready with TLS, MiddleManager-less, ZooKeeper-less, GitOps](https://www.iunera.com/kraken/time-series/apache-druid-on-kubernetes-production-ready-with-tls-mm%E2%80%91less-zookeeper%E2%80%91less-gitops/)
+
 # Installation
 The Repo is included in fluxcd with following setup.
 
