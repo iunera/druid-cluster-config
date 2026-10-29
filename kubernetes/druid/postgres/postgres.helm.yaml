@@ -51,6 +51,9 @@ spec:
       annotations: {}
       podLabels:
         app.kubernetes.io/networkpolicy-group: druid
+      networkPolicy:
+        enabled: false
 
     metrics:
       enabled: true
+
