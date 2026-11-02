@@ -12571,6 +12571,7 @@ spec:
     control-plane: controller-manager
 ---
 # Source: druid-operator/templates/deployment.yaml
+# TODO: Update druid-operator (chart 0.3.4 / operator v1.1.0 is outdated; images mirrored to iunera/* because upstream gcr.io/kubebuilder/kube-rbac-proxy:v0.13.1 is gone)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -12622,7 +12623,8 @@ spec:
             - --upstream=http://127.0.0.1:8080/
             - --logtostderr=true
             - --v=0
-          image: "gcr.io/kubebuilder/kube-rbac-proxy:v0.13.1"
+          # TODO: Update druid-operator (mirrored from gcr.io/kubebuilder/kube-rbac-proxy:v0.13.1)
+          image: "iunera/kube-rbac-proxy:v0.13.1"
           imagePullPolicy: IfNotPresent
           name: kube-rbac-proxy
           ports:
@@ -12658,7 +12660,8 @@ spec:
                   fieldPath: metadata.name
           command:
             - /manager
-          image: "datainfrahq/druid-operator:v1.1.0"
+          # TODO: Update druid-operator (mirrored from datainfrahq/druid-operator:v1.1.0)
+          image: "iunera/druid-operator:v1.1.0"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             
