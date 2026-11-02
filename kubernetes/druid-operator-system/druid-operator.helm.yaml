@@ -1,0 +1,40 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: druid-operator
+  namespace: druid-operator-system
+spec:
+  releaseName: druid-operator
+  targetNamespace: druid-operator-system
+  chart:
+    spec:
+      chart: druid-operator
+      version: ">=0.4.0 <0.5.0"
+      sourceRef:
+        kind: HelmRepository
+        name: deepbi-charts
+        namespace: druid-operator-system
+  interval: 5m0s
+  install:
+    createNamespace: false
+    crds: Skip
+  upgrade:
+    crds: Skip
+  values:
+    nameOverride: "druid-operator"
+    serviceAccount:
+      name: "druid-operator"
+    env:
+      DENY_LIST: "default,kube-system"
+      RECONCILE_WAIT: "10s"
+      WATCH_NAMESPACE: "druid"
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: ""
+    tolerations:
+      - key: "node-role.kubernetes.io/master"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
