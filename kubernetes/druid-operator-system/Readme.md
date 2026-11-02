@@ -1,5 +1,8 @@
-# Manual Manifest Generation
+# Druid Operator Deployment
 
-```
-helm -n druid-operator-system template druid-operator ./druid-operator/chart --set env.WATCH_NAMESPACE="druid" | tee druid-operator.manifest.yaml
-```
+Managed as a FluxCD `HelmRelease` using the `deepbi-charts` repository (`https://charts.deep.bi`).
+
+- Chart: `druid-operator` (`>=0.4.0 <0.5.0`, appVersion `v1.3.3`)
+- Namespace: `druid-operator-system`
+- Watched Namespace: `druid`
+- CRDs: Managed by Helm (`CreateReplace`)
