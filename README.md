@@ -1,9 +1,9 @@
 # druid-cluster-config
 
-This repo contains the Configuration of a production-ready kubernetes-native Apache Druid cluster based on [druid-operator](https://github.com/datainfrahq/druid-operator) and [fluxcd](https://fluxcd.io/flux/components/kustomize/kustomizations/) as gitops tool. 
+This repo contains the Configuration of a production-ready kubernetes-native Apache Druid cluster based on [druid-operator](https://github.com/apache/druid-operator) (distributed via [charts.deep.bi](https://charts.deep.bi)) and [fluxcd](https://fluxcd.io/flux/components/kustomize/kustomizations/) as gitops tool. 
 * Kubernetes-native means that there are ...
   * no zookeeper in place for service discovery 😍
-  * middlemanager are replaced by kubernetes jobs which allows use to utilize cluster autoscaling 😍
+  * middlemanager are replaced by kubernetes jobs which allows us to utilize cluster autoscaling 😍
   * horizontal pod autoscaling (HPA) for historical nodes 
 * Production-ready means:
   * TLS Encryption on all components
@@ -24,7 +24,7 @@ For architectural context and step-by-step guides to running a production-ready,
 The Repo is included in fluxcd with following setup.
 
 ## Gitops
-```
+```yaml
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
@@ -52,12 +52,20 @@ spec:
     name: druid-cluster-config
 ```
 
+## Druid Operator
+
+The operator is deployed under `druid-operator-system` as a Flux `HelmRelease`:
+- **Repository**: [`kubernetes/druid-operator-system/deepbi-charts.repo.yaml`](./kubernetes/druid-operator-system/deepbi-charts.repo.yaml) (`https://charts.deep.bi`)
+- **HelmRelease**: [`kubernetes/druid-operator-system/druid-operator.helm.yaml`](./kubernetes/druid-operator-system/druid-operator.helm.yaml) (chart `0.4.2`, appVersion `v1.3.3`)
+- **CRDs**: [`kubernetes/druid-operator-system/druid.apache.org_druids.crd.yaml`](./kubernetes/druid-operator-system/druid.apache.org_druids.crd.yaml) and [`kubernetes/druid-operator-system/druid.apache.org_druidingestions.crd.yaml`](./kubernetes/druid-operator-system/druid.apache.org_druidingestions.crd.yaml)
+
 ## Persistency
 
 Currently we have the legacy approach of PVCs for the deepstorage. In future development (when we have time) we will migrate to S3 Object storage.
 
-```
----apiVersion: v1
+```yaml
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: iuneradruid-deepstorage
@@ -72,7 +80,7 @@ spec:
 ```
 
 The postgres serving as metastore database wants to have a PVC, too.
-```
+```yaml
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -95,7 +103,7 @@ Details here: https://github.com/apache/druid/blob/master/docs/operations/securi
 
 
 ### Create keystore & Truststore
-```
+```bash
 keytool -keystore keystore.jks -storepass $(pwgen 64 -n1 -s | tr -d '\n' | tee keystorepassword) -keypass  $(cat keystorepassword) -genkey -alias druid  -keyalg RSA -keysize 4096 -validity 3650 -dname "CN=druid" -storetype JKS 
 
 keytool -export -alias druid -keystore keystore.jks -rfc -file druid.cert -storepass $(cat keystorepassword)
@@ -110,7 +118,7 @@ keytool -import -file druid.cert -storepass changeit -alias druid -keystore trus
 
 ### Create Secret
 
-```
+```bash
 # to cluster
 kubectl --namespace=druid \
   create secret generic keystores \

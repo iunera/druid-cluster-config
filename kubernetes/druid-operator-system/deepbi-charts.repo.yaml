@@ -1,0 +1,10 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: deepbi-charts
+  namespace: druid-operator-system
+spec:
+  interval: 10m0s
+  timeout: 1m0s
+  url: https://charts.deep.bi
