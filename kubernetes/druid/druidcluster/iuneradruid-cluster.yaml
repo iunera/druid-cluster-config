@@ -9,7 +9,7 @@ spec:
   commonConfigMountPath: /opt/druid/conf/druid/cluster/_common
   rollingDeploy: false
   startScript: /druid.sh
-  image: apache/druid:38.0.0
+  image: iunera/druiddev:38.0.0-20261102T221651
   imagePullPolicy: Always
   podAnnotations:
     reason: this-cluster-is-k8s-discovery
