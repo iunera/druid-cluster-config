@@ -26,7 +26,7 @@ spec:
 
   log4j.config: |-
     <?xml version="1.0" encoding="UTF-8" ?>
-    <Configuration status="INFO">
+    <Configuration status="WARN">
       <Appenders>
         <Console name="console" target="SYSTEM_OUT">
           <PatternLayout pattern="%d{ISO8601} %p [%t] %c - %m%n"/>
@@ -47,7 +47,7 @@ spec:
 
   jvm.options: |-
     -server
-    -Dlog4j.debug="ERROR"
+    -Dlog4j2.StatusLogger.level=WARN
     -Duser.timezone=UTC
     -Dfile.encoding=UTF-8
     -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
@@ -443,17 +443,17 @@ spec:
       replicas: 1
 
       livenessProbe:
-        initialDelaySeconds: 10
-        periodSeconds: 5
-        failureThreshold: 3
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        failureThreshold: 10
         httpGet:
           path: /status/health
           port: 8281
           scheme: HTTPS
       readinessProbe:
-        initialDelaySeconds: 10
-        periodSeconds: 5
-        failureThreshold: 3
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        failureThreshold: 15
         httpGet:
           path: /status/health
           port: 8281
@@ -513,11 +513,17 @@ spec:
           cpu: 1000m
           memory: 2Gi
       livenessProbe:
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        failureThreshold: 10
         httpGet:
           path: /status/health
           port: 8290
           scheme: HTTPS
       readinessProbe:
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        failureThreshold: 15
         httpGet:
           path: /status/health
           port: 8290
@@ -551,7 +557,7 @@ spec:
         druid.indexer.runner.taskCleanupInterval=PT10M
         druid.indexer.runner.K8sjobLaunchTimeout=PT1H
         druid.indexer.runner.labels={"app.kubernetes.io/networkpolicy-group":"druid"}
-        druid.indexer.runner.graceTerminationPeriodSeconds=PT30S
+        druid.indexer.runner.graceTerminationPeriodSeconds=30
 
         # showing task  for 4 Weeks in WebUI
         druid.indexer.storage.recentlyFinishedThreshold=P4W
@@ -670,17 +676,17 @@ spec:
       nodeConfigMountPath: "/opt/druid/conf/druid/cluster/query/router"
       replicas: 1
       livenessProbe:
-        initialDelaySeconds: 10
-        periodSeconds: 5
-        failureThreshold: 3
+        initialDelaySeconds: 60
+        periodSeconds: 10
+        failureThreshold: 10
         httpGet:
           path: /status/health
           port: 9088
           scheme: HTTPS
       readinessProbe:
-        initialDelaySeconds: 10
-        periodSeconds: 5
-        failureThreshold: 3
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        failureThreshold: 15
         httpGet:
           path: /status/health
           port: 9088

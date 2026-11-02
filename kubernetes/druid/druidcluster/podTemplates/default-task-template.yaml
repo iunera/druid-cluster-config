@@ -203,7 +203,7 @@ data:
       -server
       -Duser.timezone=UTC
       -Dfile.encoding=UTF-8
-      -Dlog4j.debug
+      -Dlog4j2.StatusLogger.level=WARN
       -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
       -Djava.io.tmpdir=/druid/data
       -Xms4G
