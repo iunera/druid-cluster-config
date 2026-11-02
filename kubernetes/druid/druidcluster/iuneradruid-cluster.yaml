@@ -194,6 +194,8 @@ spec:
     druid.enableTlsPort=true
     # Disable non-TLS Ports
     druid.enablePlaintextPort=false
+    # Disable strict SNI host checking for Kubernetes HTTPS probes (Kubelet sends IP, not domain in SNI)
+    druid.server.http.enforceStrictSNIHostChecking=false
 
     # client side TLS settings
     druid.client.https.protocol=TLSv1.2
