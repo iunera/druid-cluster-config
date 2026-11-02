@@ -19,7 +19,6 @@ data:
     template:
       spec:
         restartPolicy: Never
-        serviceAccount: default
         serviceAccountName: default
         securityContext:
           fsGroup: 1000
@@ -28,7 +27,7 @@ data:
 
         containers:
         - name: main
-          image: iunera/druid:29.0.1
+          image: apache/druid:38.0.0
           imagePullPolicy: Always
           command:
           - sh
@@ -203,7 +202,7 @@ data:
       -server
       -Duser.timezone=UTC
       -Dfile.encoding=UTF-8
-      -Dlog4j.debug
+      -Dlog4j2.StatusLogger.level=WARN
       -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager
       -Djava.io.tmpdir=/druid/data
       -Xms4G
