@@ -19,7 +19,6 @@ data:
     template:
       spec:
         restartPolicy: Never
-        serviceAccount: default
         serviceAccountName: default
         securityContext:
           fsGroup: 1000
