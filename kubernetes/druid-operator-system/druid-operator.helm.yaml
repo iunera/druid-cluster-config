@@ -18,9 +18,9 @@ spec:
   interval: 5m0s
   install:
     createNamespace: false
-    crds: CreateReplace
+    crds: Skip
   upgrade:
-    crds: CreateReplace
+    crds: Skip
   values:
     nameOverride: "druid-operator"
     serviceAccount:
