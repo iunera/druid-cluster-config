@@ -27,7 +27,7 @@ data:
 
         containers:
         - name: main
-          image: apache/druid:38.0.0
+          image: iunera/druiddev:38.0.0-20261118T114354
           imagePullPolicy: Always
           command:
           - sh
@@ -200,7 +200,6 @@ data:
   jvm.config: |-
 
       -server
-      -XX:-UseBASE64Intrinsics
       -Duser.timezone=UTC
       -Dfile.encoding=UTF-8
       -Dlog4j2.StatusLogger.level=WARN
