@@ -200,6 +200,7 @@ data:
   jvm.config: |-
 
       -server
+      -XX:-UseBASE64Intrinsics
       -Duser.timezone=UTC
       -Dfile.encoding=UTF-8
       -Dlog4j2.StatusLogger.level=WARN

@@ -47,6 +47,7 @@ spec:
 
   jvm.options: |-
     -server
+    -XX:-UseBASE64Intrinsics
     -Dlog4j2.StatusLogger.level=WARN
     -Duser.timezone=UTC
     -Dfile.encoding=UTF-8
