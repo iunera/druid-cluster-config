@@ -27,7 +27,7 @@ data:
 
         containers:
         - name: main
-          image: iunera/druid:38.0.0
+          image: iunera/druiddev:39.0.0-20261119T144441
           imagePullPolicy: Always
           command:
           - sh
